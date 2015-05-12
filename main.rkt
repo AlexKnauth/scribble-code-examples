@@ -80,7 +80,8 @@
 
 (define (str-w/-lang->module-syntax #:src [src #f] . strs)
   (parameterize ([read-accept-lang #t]
-                 [read-accept-reader #t])
+                 [read-accept-reader #t]
+                 [port-count-lines-enabled #t])
     (read-syntax
      (or src 'str-w/-lang->module-syntax)
      (open-input-string
