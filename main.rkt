@@ -73,8 +73,17 @@
          (beside/baseline (tt ">") code #:sep (hspace 1))
          results)))))
   (cond [lang-line?
+         (define lang-line-port (open-input-string lang-line-ish))
+         (define lang-elements
+           (reverse
+            (let loop ([acc null])
+              (define input (read lang-line-port))
+              (if (eof-object? input) acc (loop (cons input acc))))))
          (nested #:style (if inset? 'code-inset #f)
-                 (codeblock0 #:context context (string-append "#lang " lang-line-ish))
+                 (hash-lang)
+                 (for/list ([element (in-list lang-elements)])
+                   (list (hspace 1)
+                         (racketmodname #,element)))
                  interaction)]
         [else
          (nested #:style (if inset? 'code-inset #f)
