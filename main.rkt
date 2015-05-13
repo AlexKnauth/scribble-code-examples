@@ -14,7 +14,7 @@
 ;; (+ 1 2)
 ;; @+[1 3]
 ;; }|
-(define (code-examples #:lang lang-line-ish #:context context . str-args)
+(define (code-examples #:lang lang-line-ish #:context context #:inset? [inset? #t] . str-args)
   (define lang-line (string-append "#lang " lang-line-ish "\n"))
   (define full-str (apply string-append lang-line str-args))
   (define m (str-w/-lang->module-syntax full-str))
@@ -54,13 +54,18 @@
          (if (not (void? result))
              (list (racketresultfont (~v result) #:decode? #f))
              '())))))
-  (above*
-   (append*
-    (for/list ([code (in-list codes)]
-               [results (in-list resultss)])
-      (cons
-       (beside/baseline (tt ">") code #:sep (hspace 1))
-       results)))))
+  (define interaction
+    (above*
+     (append*
+      (for/list ([code (in-list codes)]
+                 [results (in-list resultss)])
+        (cons
+         (beside/baseline (tt ">") code #:sep (hspace 1))
+         results)))))
+  (cond
+    [inset?
+     (nested #:style 'code-inset interaction)]
+    [else interaction]))
 
 (define (above* stuff)
   (tabular
