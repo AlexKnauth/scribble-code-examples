@@ -1,6 +1,8 @@
 #lang racket/base
 
-(provide code-examples)
+(provide code-examples
+         make-code-eval
+         )
 
 (require racket/list
          racket/sandbox
@@ -8,6 +10,12 @@
          scribble/manual
          syntax/parse ; for run-time
          )
+
+(define (make-code-eval #:lang lang)
+  (parameterize ([sandbox-output 'string]
+                 [sandbox-error-output 'string]
+                 [sandbox-propagate-exceptions #f])
+    (make-module-evaluator (string-append "#lang " lang "\n"))))
 
 ;; example use of code-examples:
 ;; @code-examples[#:lang "at-exp racket" #:context #'here]|{
@@ -18,6 +26,7 @@
                        #:context context
                        #:inset? [inset? #t]
                        #:lang-line? [lang-line? #f]
+                       #:eval [given-eval #f]
                        . str-args)
   (define lang-line (string-append "#lang " lang-line-ish "\n"))
   (define full-str (apply string-append lang-line str-args))
@@ -32,10 +41,7 @@
       (define end (+ pos (syntax-span form)))
       (substring full-str (sub1 pos) (sub1 end))))
   (define evaluator
-    (parameterize ([sandbox-output 'string]
-                   [sandbox-error-output 'string]
-                   [sandbox-propagate-exceptions #f])
-      (make-module-evaluator lang-line)))
+    (or given-eval (make-code-eval #:lang lang-line-ish)))
   (define codes
     (for/list ([str (in-list strs)])
       (define code (codeblock0 #:keep-lang-line? #f #:context context (string-append lang-line str)))
