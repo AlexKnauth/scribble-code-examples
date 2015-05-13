@@ -8,6 +8,7 @@
          racket/sandbox
          racket/format
          scribble/manual
+         (only-in scribble/decode pre-flow?)
          syntax/parse ; for run-time
          )
 
@@ -26,6 +27,7 @@
                        #:context context
                        #:inset? [inset? #t]
                        #:lang-line? [lang-line? #f]
+                       #:show-lang-line [show-lang-line #f]
                        #:eval [given-eval #f]
                        . str-args)
   (define lang-line (string-append "#lang " lang-line-ish "\n"))
@@ -72,9 +74,17 @@
         (cons
          (beside/baseline (tt ">") code #:sep (hspace 1))
          results)))))
-  (cond [lang-line?
+  (cond [(or show-lang-line lang-line?)
+         (define lang-line-to-show
+           (cond [(boolean? show-lang-line)
+                  (codeblock0 #:context context (string-append "#lang " lang-line-ish))]
+                 [(pre-flow? show-lang-line)
+                  show-lang-line]
+                 [else (error 'code-examples
+                              "expected (or/c boolean? pre-flow?) for #:show-lang-line, given: ~v"
+                              show-lang-line)]))
          (nested #:style (if inset? 'code-inset #f)
-                 (codeblock0 #:context context (string-append "#lang " lang-line-ish))
+                 lang-line-to-show
                  interaction)]
         [else
          (nested #:style (if inset? 'code-inset #f)

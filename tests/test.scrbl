@@ -2,7 +2,7 @@
 @(require "../main.rkt"
           (for-label racket))
 
-@code-examples[#:lang "at-exp racket" #:context #'here #:lang-line? #t]|{
+@code-examples[#:lang "at-exp racket" #:context #'here #:show-lang-line #t]|{
 (+ 1 2)
 @+[1 3]
 (define @f[x]
