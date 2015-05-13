@@ -14,7 +14,11 @@
 ;; (+ 1 2)
 ;; @+[1 3]
 ;; }|
-(define (code-examples #:lang lang-line-ish #:context context #:inset? [inset? #t] . str-args)
+(define (code-examples #:lang lang-line-ish
+                       #:context context
+                       #:inset? [inset? #t]
+                       #:lang-line? [lang-line? #f]
+                       . str-args)
   (define lang-line (string-append "#lang " lang-line-ish "\n"))
   (define full-str (apply string-append lang-line str-args))
   (define m (str-w/-lang->module-syntax full-str))
@@ -62,10 +66,13 @@
         (cons
          (beside/baseline (tt ">") code #:sep (hspace 1))
          results)))))
-  (cond
-    [inset?
-     (nested #:style 'code-inset interaction)]
-    [else interaction]))
+  (cond [lang-line?
+         (nested #:style (if inset? 'code-inset #f)
+                 (codeblock0 #:context context (string-append "#lang " lang-line-ish))
+                 interaction)]
+        [else
+         (nested #:style (if inset? 'code-inset #f)
+                 interaction)]))
 
 (define (above* stuff)
   (tabular
