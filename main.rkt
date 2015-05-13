@@ -45,14 +45,14 @@
       (define error-output (get-error-output evaluator))
       (append*
        (if (not (= (string-length output) 0))
-           (list (racketoutput output))
+           (list (racketoutput (literal output)))
            '())
        (if (not (= (string-length error-output) 0))
-           (list (racketerror error-output))
+           (list (racketerror (literal error-output)))
            '())
        (for/list ([result (in-list results)])
          (if (not (void? result))
-             (list (racketresultfont (~v result)))
+             (list (racketresultfont (~v result) #:decode? #f))
              '())))))
   (above*
    (append*

@@ -8,5 +8,8 @@
 (define @f[x]
   x)
 @f{hello world}
+'(1 2 3)
+(print '(1 2 3))
+(eprintf "~v" '(1 2 3))
 }|
 
