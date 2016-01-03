@@ -54,3 +54,17 @@ Produces this:
 }|
 }|
 }
+
+@defproc[(make-code-eval [#:lang language string?]) evaluator?]{
+Creates a sandbox evaluator that can be used as the @racket[#:eval]
+argument for @racket[code-examples].
+
+Examples:
+@code-examples[#:lang "racket" #:context #'here]{
+(require scribble-code-examples)
+(define ev (make-code-eval #:lang "racket"))
+(ev '(+ 1 2))
+(ev "(+ 1 2)")
+}
+}
+
