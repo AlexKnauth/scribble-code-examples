@@ -1,6 +1,7 @@
 #lang scribble/manual
 
-@(require (for-label scribble-code-examples
+@(require scribble-code-examples
+          (for-label scribble-code-examples
                      racket/base
                      racket/contract/base
                      scribble/decode
@@ -19,6 +20,37 @@
                         [examples string?]
                         ...)
          block?]{
-A scribble examples form that works for non-s-expression languages
-}
+A scribble examples form that works for non-s-expression languages.
 
+For example, this:
+@verbatim|{
+@code-examples[#:lang "at-exp racket" #:context #'here]|{
+(+ 1 2)
+@+[1 3]
+}|
+}|
+Produces this:
+@code-examples[#:lang "at-exp racket" #:context #'here]|{
+(+ 1 2)
+@+[1 3]
+}|
+
+And this:
+@verbatim|{
+@code-examples[#:lang "at-exp racket" #:context #'here]|{
+(require scribble-code-examples (for-label racket/base))
+@code-examples[#:lang "at-exp racket" #:context #'here]|{
+(+ 1 2)
+@+[1 3]
+}|
+}|
+}|
+Produces this:
+@code-examples[#:lang "at-exp racket" #:context #'here]|{
+(require scribble-code-examples (for-label racket/base))
+@code-examples[#:lang "at-exp racket" #:context #'here]|{
+(+ 1 2)
+@+[1 3]
+}|
+}|
+}
