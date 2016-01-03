@@ -28,7 +28,7 @@
                        #:inset? [inset? #t]
                        #:lang-line? [lang-line? #f]
                        #:show-lang-line [show-lang-line #f]
-                       #:eval [given-eval #f]
+                       #:eval [evaluator (make-code-eval #:lang lang-line-ish)]
                        . str-args)
   (define lang-line (string-append "#lang " lang-line-ish "\n"))
   (define full-str (apply string-append lang-line str-args))
@@ -42,8 +42,6 @@
       (define pos (syntax-position form))
       (define end (+ pos (syntax-span form)))
       (substring full-str (sub1 pos) (sub1 end))))
-  (define evaluator
-    (or given-eval (make-code-eval #:lang lang-line-ish)))
   (define codes
     (for/list ([str (in-list strs)])
       (define code (codeblock0 #:keep-lang-line? #f #:context context (string-append lang-line str)))
