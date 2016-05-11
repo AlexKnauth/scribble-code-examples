@@ -9,7 +9,9 @@
   x)
 @f{hello world}
 '(1 2 3)
+;; this prints it to the current output port
 (print '(1 2 3))
+;; but this prints it to the current error port
 (eprintf "~v" '(1 2 3))
 }|
 

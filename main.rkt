@@ -7,6 +7,7 @@
 (require racket/list
          racket/sandbox
          racket/format
+         racket/string
          scribble/manual
          (only-in scribble/decode pre-flow?)
          syntax/parse ; for run-time
@@ -37,11 +38,15 @@
     (syntax-parse m #:datum-literals (module #%module-begin)
       [(module _ m-lang:expr (#%module-begin stuff ...))
        (values (syntax->datum #'m-lang) (syntax->list #'(stuff ...)))]))
-  (define strs
+  ;; zero-indexed end positions in the full-str string
+  (define end-positions
     (for/list ([form (in-list forms)])
-      (define pos (syntax-position form))
-      (define end (+ pos (syntax-span form)))
-      (substring full-str (sub1 pos) (sub1 end))))
+      ; syntax-positions are one-indexed, so use sub1
+      (sub1 (+ (syntax-position form) (syntax-span form)))))
+  (define strs
+    (for/list ([start (in-list (cons (string-length lang-line) end-positions))]
+               [end (in-list end-positions)])
+      (string-trim (substring full-str start end) #:left? #true #:right? #false)))
   (define codes
     (for/list ([str (in-list strs)])
       (define code (codeblock0 #:keep-lang-line? #f #:context context (string-append lang-line str)))
