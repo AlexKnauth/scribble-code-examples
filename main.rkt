@@ -16,7 +16,8 @@
 (define (make-code-eval #:lang lang)
   (parameterize ([sandbox-output 'string]
                  [sandbox-error-output 'string]
-                 [sandbox-propagate-exceptions #f])
+                 [sandbox-propagate-exceptions #f]
+                 [sandbox-memory-limit 100])
     (make-module-evaluator (string-append "#lang " lang "\n"))))
 
 ;; example use of code-examples:
