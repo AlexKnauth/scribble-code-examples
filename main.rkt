@@ -14,11 +14,13 @@
          )
 
 (define (make-code-eval #:lang lang)
-  (parameterize ([sandbox-output 'string]
-                 [sandbox-error-output 'string]
-                 [sandbox-propagate-exceptions #f]
-                 [sandbox-memory-limit 100])
-    (make-module-evaluator (string-append "#lang " lang "\n"))))
+  (call-with-trusted-sandbox-configuration
+   (lambda ()
+     (parameterize ([sandbox-output 'string]
+                    [sandbox-error-output 'string]
+                    [sandbox-propagate-exceptions #f]
+                    [sandbox-propagate-breaks #f])
+       (make-module-evaluator (string-append "#lang " lang "\n"))))))
 
 ;; example use of code-examples:
 ;; @code-examples[#:lang "at-exp racket" #:context #'here]|{
