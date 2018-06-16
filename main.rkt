@@ -43,36 +43,14 @@
   (define strs
     (source-location-strs full-str (string-length lang-line) forms))
 
-  (define codes
-    (for/list ([str (in-list strs)])
-      (define code (codeblock0 #:keep-lang-line? #f #:context context (string-append lang-line str)))
-      code))
-  ;; resultss : (Listof (Listof Scribble-Stuff))
-  (define resultss
-    (for/list ([form (in-list forms)])
-      (define results
-        (call-with-values (λ () (evaluator form)) list))
-      (define output (get-output evaluator))
-      (define error-output (get-error-output evaluator))
-      (append*
-       (if (not (= (string-length output) 0))
-           (list (racketoutput (literal output)))
-           '())
-       (if (not (= (string-length error-output) 0))
-           (list (racketerror (literal error-output)))
-           '())
-       (for/list ([result (in-list results)])
-         (if (not (void? result))
-             (list (racketresultfont (~v result) #:decode? #f))
-             '())))))
   (define interaction
     (above*
      (append*
-      (for/list ([code (in-list codes)]
-                 [results (in-list resultss)])
-        (cons
-         (beside/baseline (tt ">") code #:sep (hspace 1))
-         results)))))
+      (for/list ([str (in-list strs)]
+                 [form (in-list forms)])
+        (evaluation-interaction str evaluator form
+                                #:lang-line lang-line
+                                #:context context)))))
   (cond [(or show-lang-line lang-line?)
          (define lang-line-to-show
            (cond [(boolean? show-lang-line)
@@ -89,17 +67,58 @@
          (nested #:style (if inset? 'code-inset #f)
                  interaction)]))
 
+;; ---------------------------------------------------------
+
+;; evaluation-interaction :
+;;   String Evaluator Stx #:lang String #:context Stx
+;;   ->
+;;   [Listof ScribbleStuff]
+(define (evaluation-interaction str evaluator form
+                                #:lang-line lang-line
+                                #:context context)
+  (define code
+    (codeblock0 #:keep-lang-line? #f #:context context
+                (string-append lang-line str)))
+  (define results
+    (evaluation-results evaluator form))
+  (cons
+   (beside/baseline (tt ">") code #:sep (hspace 1))
+   results))
+
+;; evaluation-results : Evaluator Stx -> [Listof Scribble-Stuff]
+(define (evaluation-results evaluator form)
+  (define results
+    (call-with-values (λ () (evaluator form)) list))
+  (define output (get-output evaluator))
+  (define error-output (get-error-output evaluator))
+  (append*
+   (if (not (= (string-length output) 0))
+       (list (racketoutput (literal output)))
+       '())
+   (if (not (= (string-length error-output) 0))
+       (list (racketerror (literal error-output)))
+       '())
+   (for/list ([result (in-list results)])
+     (if (not (void? result))
+         (list (racketresultfont (~v result) #:decode? #f))
+         '()))))
+
+;; ---------------------------------------------------------
+
+;; [Listof ScribbleStuff] -> ScribbleStuff
 (define (above* stuff)
   (tabular
    (for/list ([stuff (in-list stuff)])
      (list stuff))))
 
+;; #:sep ScribbleStuff [Listof ScribbleStuff] -> ScribbleStuff
 (define (beside*/baseline #:sep sep stuff)
   (tabular
    #:cell-properties '((baseline))
    #:sep sep
    (list stuff)))
 
+;; #:sep ScribbleStuff ScribbleStuff ... -> ScribbleStuff
 (define (beside/baseline #:sep sep . stuff)
   (beside*/baseline #:sep sep stuff))
 
