@@ -38,18 +38,11 @@
   (define full-str (apply string-append lang-line str-args))
   (define m (str-w/-lang->module-syntax full-str))
   (define-values [m-lang forms]
-    (syntax-parse m #:datum-literals (module #%module-begin)
-      [(module _ m-lang:expr (#%module-begin stuff ...))
-       (values (syntax->datum #'m-lang) (syntax->list #'(stuff ...)))]))
-  ;; zero-indexed end positions in the full-str string
-  (define end-positions
-    (for/list ([form (in-list forms)])
-      ; syntax-positions are one-indexed, so use sub1
-      (sub1 (+ (syntax-position form) (syntax-span form)))))
+    (split-module-syntax m))
+
   (define strs
-    (for/list ([start (in-list (cons (string-length lang-line) end-positions))]
-               [end (in-list end-positions)])
-      (string-trim (substring full-str start end) #:left? #true #:right? #false)))
+    (source-location-strs full-str (string-length lang-line) forms))
+
   (define codes
     (for/list ([str (in-list strs)])
       (define code (codeblock0 #:keep-lang-line? #f #:context context (string-append lang-line str)))
@@ -110,8 +103,9 @@
 (define (beside/baseline #:sep sep . stuff)
   (beside*/baseline #:sep sep stuff))
 
+;; ---------------------------------------------------------
 
-
+;; str-w/-lang->module-syntax : String ... [#:src Any] -> ModuleStx
 (define (str-w/-lang->module-syntax #:src [src #f] . strs)
   (parameterize ([read-accept-lang #t]
                  [read-accept-reader #t]
@@ -120,4 +114,37 @@
      (or src 'str-w/-lang->module-syntax)
      (open-input-string
       (apply string-append strs)))))
+
+;; split-module-syntax : ModuleStx -> (values ModulePath [Listof Stx])
+(define (split-module-syntax m)
+  (syntax-parse m #:datum-literals (module #%module-begin)
+    [(module _ m-lang:expr (#%module-begin stuff ...))
+     (values (syntax->datum #'m-lang) (syntax->list #'(stuff ...)))]))
+
+;; source-location-strs : String Natural [Listof Stx] -> [Listof String]
+(define (source-location-strs full-str first-start forms)
+
+  ;; zero-indexed end positions in the full-str string
+  (define end-positions
+    (for/list ([form (in-list forms)])
+      ; syntax-positions are one-indexed, so use sub1
+      (sub1 (syntax-end-position form))))
+
+  ;; zero-indexed start positions in the full-str string
+  ;; Each form "starts" from the end-position of the
+  ;; previous one so that comments written before a form are
+  ;; included in that form
+  (define start-positions
+    (cons first-start (drop-right end-positions 1)))
+
+  (for/list ([start (in-list start-positions)]
+             [end (in-list end-positions)])
+    (string-trim (substring full-str start end) #:left? #true #:right? #false)))
+
+;; syntax-end-position : Syntax -> [Maybe PositiveInteger]
+;; Produces the 1-indexed position of the end of the syntax object
+(define (syntax-end-position stx)
+  (define pos (syntax-position stx))
+  (define span (syntax-span stx))
+  (and pos span (+ pos span)))
 
