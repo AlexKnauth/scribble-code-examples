@@ -10,6 +10,8 @@
 
 @title{scribble-code-examples}
 
+source code: @url["https://github.com/AlexKnauth/scribble-code-examples"]
+
 @defmodule[scribble-code-examples]
 
 @defproc[(code-examples [#:lang language string?]
