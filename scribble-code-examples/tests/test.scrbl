@@ -1,5 +1,5 @@
 #lang scribble/manual
-@(require "../main.rkt"
+@(require scribble-code-examples
           (for-label racket))
 
 @code-examples[#:lang "at-exp racket" #:context #'here #:show-lang-line #t]|{
