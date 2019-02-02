@@ -138,6 +138,8 @@
 (define (split-module-syntax m)
   (syntax-parse m #:datum-literals (module #%module-begin)
     [(module _ m-lang:expr (#%module-begin stuff ...))
+     (values (syntax->datum #'m-lang) (syntax->list #'(stuff ...)))]
+    [(module _ m-lang:expr stuff ...)
      (values (syntax->datum #'m-lang) (syntax->list #'(stuff ...)))]))
 
 ;; source-location-strs : String Natural [Listof Stx] -> [Listof String]
