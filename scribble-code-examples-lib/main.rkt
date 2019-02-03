@@ -144,6 +144,12 @@
 
 ;; source-location-strs : String Natural [Listof Stx] -> [Listof String]
 (define (source-location-strs full-str first-start forms)
+  ; Warning! Relying on what may be an implementation detail here!
+  ; The default reader treats "\r\n" as having length 1 when it
+  ; produces srclocs. But the string manipulation operations we
+  ; are about to use consider "\r\n" to have a length of 2.
+  ; Do this replacement so that things line up:
+  (set! full-str (string-replace full-str "\r\n" "\n"))
 
   ;; zero-indexed end positions in the full-str string
   (define end-positions
