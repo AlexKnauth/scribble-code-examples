@@ -11,6 +11,7 @@
          scribble/manual
          (only-in scribble/decode pre-flow?)
          syntax/parse ; for run-time
+         "util/srcloc-position-char-index.rkt"
          )
 
 (define (make-code-eval #:lang lang)
@@ -144,12 +145,15 @@
 
 ;; source-location-strs : String Natural [Listof Stx] -> [Listof String]
 (define (source-location-strs full-str first-start forms)
+  ;; pos->index : PosInt -> Natural
+  (define pos->index (srcloc-position->char-index full-str))
 
   ;; zero-indexed end positions in the full-str string
   (define end-positions
     (for/list ([form (in-list forms)])
-      ; syntax-positions are one-indexed, so use sub1
-      (sub1 (syntax-end-position form))))
+      ; syntax-positions are different from string char-indexes,
+      ; so convert using pos->index
+      (pos->index (syntax-end-position form))))
 
   ;; zero-indexed start positions in the full-str string
   ;; Each form "starts" from the end-position of the
