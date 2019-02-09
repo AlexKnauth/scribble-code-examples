@@ -4,5 +4,5 @@
 
 (define deps '("base" "scribble-lib" "sandbox-lib"))
 
-(define build-deps '("racket-doc" "scribble-doc"))
+(define build-deps '("rackunit-lib"))
 
