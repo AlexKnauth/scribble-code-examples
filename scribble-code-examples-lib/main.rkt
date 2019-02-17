@@ -41,15 +41,13 @@
   (define-values [m-lang forms]
     (split-module-syntax m))
 
-  (define strs
-    (source-location-strs full-str (string-length lang-line) forms))
+  (define mapped-forms (find-substrings full-str forms))
 
   (define interaction
     (above*
      (append*
-      (for/list ([str (in-list strs)]
-                 [form (in-list forms)])
-        (evaluation-interaction str evaluator form
+      (for/list ([mapped-form (in-list mapped-forms)])
+        (evaluation-interaction mapped-form evaluator
                                 #:lang-line lang-line
                                 #:context context)))))
   (cond [(or show-lang-line lang-line?)
@@ -71,20 +69,24 @@
 ;; ---------------------------------------------------------
 
 ;; evaluation-interaction :
-;;   String Evaluator Stx #:lang String #:context Stx
+;;   [Pairof Stx [Maybe String]] Evaluator #:lang String #:context Stx
 ;;   ->
 ;;   [Listof ScribbleStuff]
-(define (evaluation-interaction str evaluator form
+(define (evaluation-interaction mapped-form evaluator
                                 #:lang-line lang-line
                                 #:context context)
-  (define code
-    (codeblock0 #:keep-lang-line? #f #:context context
-                (string-append lang-line str)))
+  (define form (car mapped-form))
+  (define str (cdr mapped-form))
   (define results
     (evaluation-results evaluator form))
-  (cons
-   (beside/baseline (tt ">") code #:sep (hspace 1))
-   results))
+  (if (not str)
+      '()
+      (let ([code
+             (codeblock0 #:keep-lang-line? #f #:context context
+                         (string-append lang-line str))])
+        (cons
+         (beside/baseline (tt ">") code #:sep (hspace 1))
+         results))))
 
 ;; evaluation-results : Evaluator Stx -> [Listof Scribble-Stuff]
 (define (evaluation-results evaluator form)
@@ -143,28 +145,27 @@
     [(module _ m-lang:expr stuff ...)
      (values (syntax->datum #'m-lang) (syntax->list #'(stuff ...)))]))
 
-;; source-location-strs : String Natural [Listof Stx] -> [Listof String]
-(define (source-location-strs full-str first-start forms)
+
+;; find-substrings : String [Listof Stx] -> [Listof [Pairof Stx [Maybe String]]]
+;; Given the full source code and the list of syntax objects,
+;; return a list of each syntax object optionally mapped to the corresponding
+;; substring from the full source code. Syntax objects that are not original
+;; will be mapped to #f.
+(define (find-substrings full-str forms)
   ;; pos->index : PosInt -> Natural
   (define pos->index (srcloc-position->char-index full-str))
-
-  ;; zero-indexed end positions in the full-str string
-  (define end-positions
-    (for/list ([form (in-list forms)])
-      ; syntax-positions are different from string char-indexes,
-      ; so convert using pos->index
-      (pos->index (syntax-end-position form))))
-
-  ;; zero-indexed start positions in the full-str string
-  ;; Each form "starts" from the end-position of the
-  ;; previous one so that comments written before a form are
-  ;; included in that form
-  (define start-positions
-    (cons first-start (drop-right end-positions 1)))
-
-  (for/list ([start (in-list start-positions)]
-             [end (in-list end-positions)])
-    (string-trim (substring full-str start end) #:left? #true #:right? #false)))
+  ;; find-substring : Stx -> [Maybe String]
+  (define (find-substring form)
+    (if (not (syntax-original? form))
+        #f
+        (let ([pos (syntax-position form)])
+          (when (not pos)
+            (error "scribble-code-examples: Assertion failed: original syntax object lacks position."))
+          (define start (pos->index pos))
+          (define end (pos->index (syntax-end-position form)))
+          (string-trim (substring full-str start end) #:left? #true #:right? #false))))
+  (map (λ(form) (cons form (find-substring form)))
+       forms))
 
 ;; syntax-end-position : Syntax -> [Maybe PositiveInteger]
 ;; Produces the 1-indexed position of the end of the syntax object
