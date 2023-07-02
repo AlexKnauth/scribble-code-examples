@@ -11,7 +11,7 @@
 
 (define build-deps '("racket-doc" "scribble-doc"))
 
-(define scribblings '(["scribblings/scribble-code-examples.scrbl" ()]))
+(define scribblings '(["scribblings/scribble-code-examples.scrbl" () ("Scribble Libraries")]))
 
 (define implies
   '("scribble-code-examples-lib"
